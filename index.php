@@ -117,3 +117,76 @@ array_key_exists('name', $_POST)
 <a href="FormsHandlerC.php">Show</a>
 
 <!--//3.Файлы-->
+<?php
+function myScanDir(string $dir): array
+{
+return array_diff(scandir($dir), ['..', '.']);
+}
+function getFiles(array $directories): array
+{
+$result = [];
+foreach ($directories as $directory)
+{
+$files = myScanDir('files/' .$directory);
+foreach ($files as $file)
+{
+$path = 'files/' . $directory . '/' . $file;
+$content = file_get_contents($path);
+$result[] = [
+'category' => $directory,
+'header' => preg_replace('/.txt$/','', $file),
+'content' => $content,
+];
+}
+}
+return $result;
+}
+$categories = myScanDir('./files');
+
+$categoriesHTML = '';
+foreach ($categories as $category)
+{
+$categoriesHTML .= "<option>$category</option>";
+}
+
+echo '<form action="" method="post">
+    <p>Email<p>
+        <input type="email" name="email"/>
+    <p>Category<p>
+        <select name="category">'
+            . $categoriesHTML .
+            '</select>
+    <p>Header<p>
+        <input type="text" name="header"/>
+    <p>Content<p>
+        <textarea rows="10" cols="40" name="content"></textarea>
+        <input type="submit" name="OK" value="Submit">
+</form>';
+if (
+array_key_exists('email', $_POST)
+&& array_key_exists('category', $_POST)
+&& array_key_exists('header', $_POST)
+&& array_key_exists('content', $_POST)
+)
+{
+$file = fopen('files/' . $_POST['category'] . '/' . $_POST['header'] .'.txt', 'wb');
+fwrite($file, $_POST['content']);
+}
+$ads = getFiles($categories);
+$tableContent = '';
+foreach ($ads as $ad)
+{
+$tableContent .= '<tr><td>'.$ad['category'].'</td><td>'.$ad['header'].'</td><td>'.$ad['content'].'</td></tr>';
+}
+
+if ($tableContent)
+{
+echo '<table border="1">
+    <tr>
+        <th>Category</th>
+        <th>Header</th>
+        <th>Content</th>
+    </tr>
+    '.$tableContent.'
+</table>';
+}
